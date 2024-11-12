@@ -8,12 +8,55 @@ on:
     branches: [ "main" ]
 
 env:
-  DOCKER_HUB_REPO: prudnikov21/playwright_vnc # Replace with your Docker Hub repo
+  DOCKER_HUB_REPO: prudnikov21/playwright_vnc
 
 jobs:
+
+  test:
+    name: Test Docker image functionality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+      
+      - name: Start Docker container
+        run: |
+          docker-compose -f docker-compose.build.yml up -d
+          sleep 10
+     
+      - name: Check container status and VNC port
+        run: |
+          echo "Checking container status..."
+          docker-compose -f docker-compose.build.yml ps
+          
+          echo "Checking if VNC port is accessible..."
+          for i in {1..5}; do
+            if nc -z localhost 13901; then
+              echo "VNC port is accessible!"
+              exit 0
+            fi
+            echo "Attempt $i: VNC port not accessible yet, waiting..."
+            sleep 5
+          done
+          echo "Failed to connect to VNC port after 5 attempts"
+          docker-compose -f docker-compose.build.yml logs
+          exit 1
+      
+      - name: Run Playwright tests
+        run: |
+          docker-compose exec -T playwright-python pytest tests/test_example.py -v
+      
   docker:
     name: Build and push Docker image
     runs-on: ubuntu-latest
+    # Only run this job for pushes to main and tags, not for PRs
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     steps:
     - name: Check out the repo
       uses: actions/checkout@v4

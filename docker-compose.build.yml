@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  playwright-python:
+    build: .
+    ports:
+      - "13901:5900"
+      - "9323:9323"
+    environment:
+      - DISPLAY=:99
+      - HEADED=${HEADED:-false}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./test-results:/app/test-results
+      - ./tests:/app/tests
+    tty: true
+    stdin_open: true
