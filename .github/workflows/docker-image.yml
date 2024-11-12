@@ -3,7 +3,7 @@ name: Docker Image CI
 on:
   push:
     branches: [ "main" ]
-    tags: [ "*.*.*" ]
+    tags: [ "[0-9]+.[0-9]+.[0-9]+" ]
   pull_request:
     branches: [ "main" ]
 
@@ -30,10 +30,8 @@ jobs:
       with:
         images: ${{ env.DOCKER_HUB_REPO }}
         tags: |
-          type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
-          type=semver,pattern={{version}},enable=${{ github.ref_type == 'tag' }}
-          type=ref,event=branch
-          type=ref,event=pr
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+          type=ref,event=tag
 
     - name: Build and push Docker image
       uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
