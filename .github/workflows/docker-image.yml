@@ -27,7 +27,7 @@ jobs:
       
       - name: Start Docker container
         run: |
-          docker-compose up -f docker-compose.build.yml -d
+          docker-compose -f docker-compose.build.yml up -d
           sleep 10 # Give container time to fully start
       
       - name: Install VNC viewer
