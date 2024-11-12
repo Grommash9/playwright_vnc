@@ -37,6 +37,19 @@ jobs:
       
       - name: Test VNC connection
         run: |
+          # Start Xvfb
+          Xvfb :99 -screen 0 1024x768x24 &
+          export DISPLAY=:99
+          
+          # Wait for Xvfb to start
+          sleep 3
+          
+          # Test if display is working
+          xdpyinfo >/dev/null 2>&1
+          
+          # Test if VNC port is open
+          nc -zv localhost 13901
+          
           # Create a simple test script that attempts to connect
           echo "#!/bin/bash" > test-vnc.sh
           echo "timeout 10 vncviewer localhost:13901 -AutoSelect=0 -PreferredEncoding=raw -FullColor=1 -viewonly -SecurityTypes=none" >> test-vnc.sh
@@ -52,6 +65,7 @@ jobs:
             sleep 5
           done
           echo "Failed to connect to VNC after 3 attempts"
+          docker-compose -f docker-compose.build.yml logs
           exit 1
       
       - name: Run Playwright tests
