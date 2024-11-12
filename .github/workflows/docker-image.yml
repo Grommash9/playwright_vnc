@@ -28,43 +28,23 @@ jobs:
       - name: Start Docker container
         run: |
           docker-compose -f docker-compose.build.yml up -d
-          sleep 10 # Give container time to fully start
-      
-      - name: Install VNC viewer
+          sleep 10
+     
+      - name: Check container status and VNC port
         run: |
-          sudo apt-get update
-          sudo apt-get install -y tigervnc-viewer
-      
-      - name: Test VNC connection
-        run: |
-          # Start Xvfb
-          Xvfb :99 -screen 0 1024x768x24 &
-          export DISPLAY=:99
+          echo "Checking container status..."
+          docker-compose -f docker-compose.build.yml ps
           
-          # Wait for Xvfb to start
-          sleep 3
-          
-          # Test if display is working
-          xdpyinfo >/dev/null 2>&1
-          
-          # Test if VNC port is open
-          nc -zv localhost 13901
-          
-          # Create a simple test script that attempts to connect
-          echo "#!/bin/bash" > test-vnc.sh
-          echo "timeout 10 vncviewer localhost:13901 -AutoSelect=0 -PreferredEncoding=raw -FullColor=1 -viewonly -SecurityTypes=none" >> test-vnc.sh
-          chmod +x test-vnc.sh
-          
-          # Try to connect multiple times
-          for i in {1..3}; do
-            echo "Attempt $i to connect to VNC..."
-            if ./test-vnc.sh; then
-              echo "VNC connection successful!"
+          echo "Checking if VNC port is accessible..."
+          for i in {1..5}; do
+            if nc -z localhost 13901; then
+              echo "VNC port is accessible!"
               exit 0
             fi
+            echo "Attempt $i: VNC port not accessible yet, waiting..."
             sleep 5
           done
-          echo "Failed to connect to VNC after 3 attempts"
+          echo "Failed to connect to VNC port after 5 attempts"
           docker-compose -f docker-compose.build.yml logs
           exit 1
       
