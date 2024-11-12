@@ -8,9 +8,43 @@ on:
     branches: [ "main" ]
 
 env:
-  DOCKER_HUB_REPO: prudnikov21/playwright_vnc # Replace with your Docker Hub repo
+  DOCKER_HUB_REPO: prudnikov21/playwright_vnc
 
 jobs:
+
+  test:
+    name: Test Docker image functionality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      
+      - name: Build Docker image
+        run: docker build -t ${{ env.DOCKER_HUB_REPO }}:test .
+      
+      - name: Start Docker container
+        run: |
+          docker-compose up -d
+          sleep 10 # Give container time to fully start
+      
+      - name: Install VNC viewer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tigervnc-viewer
+      
+      - name: Test VNC connection
+        run: |
+          # Try to connect to VNC and grab a screenshot
+          # -nowait: don't wait for user input
+          # -passwd: no password needed as configured
+          # -once: connect once and exit
+          vncviewer localhost:13901 -nowait -passwd /dev/null -once || exit 1
+          echo "VNC connection successful"
+      
+      - name: Run Playwright tests
+        run: |
+          docker-compose exec -T playwright-python pytest tests/test_example.py -v
+      
   docker:
     name: Build and push Docker image
     runs-on: ubuntu-latest
