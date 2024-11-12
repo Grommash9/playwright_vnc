@@ -19,9 +19,6 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
       
-      - name: Build Docker image
-        run: docker build -t ${{ env.DOCKER_HUB_REPO }}:test .
-
       - name: Set up Docker Compose
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -30,7 +27,7 @@ jobs:
       
       - name: Start Docker container
         run: |
-          docker-compose up -d
+          docker-compose up -f docker-compose.build.yml -d
           sleep 10 # Give container time to fully start
       
       - name: Install VNC viewer
@@ -40,12 +37,22 @@ jobs:
       
       - name: Test VNC connection
         run: |
-          # Try to connect to VNC and grab a screenshot
-          # -nowait: don't wait for user input
-          # -passwd: no password needed as configured
-          # -once: connect once and exit
-          vncviewer localhost:13901 -nowait -passwd /dev/null -once || exit 1
-          echo "VNC connection successful"
+          # Create a simple test script that attempts to connect
+          echo "#!/bin/bash" > test-vnc.sh
+          echo "timeout 10 vncviewer localhost:13901 -AutoSelect=0 -PreferredEncoding=raw -FullColor=1 -viewonly -SecurityTypes=none" >> test-vnc.sh
+          chmod +x test-vnc.sh
+          
+          # Try to connect multiple times
+          for i in {1..3}; do
+            echo "Attempt $i to connect to VNC..."
+            if ./test-vnc.sh; then
+              echo "VNC connection successful!"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Failed to connect to VNC after 3 attempts"
+          exit 1
       
       - name: Run Playwright tests
         run: |
