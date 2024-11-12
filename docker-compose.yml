@@ -1,11 +1,10 @@
 version: '3.8'
-
 services:
   playwright-python:
-    build: .
+    image: prudnikov21/playwright_vnc:latest
     ports:
-      - "13901:5900"  # VNC port
-      - "9323:9323"  # Playwright debugging port
+      - "13901:5900"
+      - "9323:9323"
     environment:
       - DISPLAY=:99
       - HEADED=${HEADED:-false}
@@ -13,6 +12,5 @@ services:
     volumes:
       - ./test-results:/app/test-results
       - ./tests:/app/tests
-    # Keep container running even on error
     tty: true
     stdin_open: true
