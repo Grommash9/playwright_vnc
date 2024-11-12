@@ -19,7 +19,7 @@ docker pull prudnikov21/playwright_vnc:latest
 
 2. Start the container:
 ```bash
-HEADED=true docker-compose up --build
+docker-compose up --build
 ```
 
 ## Running Tests
