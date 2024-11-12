@@ -7,7 +7,6 @@ services:
       - "9323:9323"
     environment:
       - DISPLAY=:99
-      - HEADED=${HEADED:-false}
       - PYTHONUNBUFFERED=1
     volumes:
       - ./test-results:/app/test-results
