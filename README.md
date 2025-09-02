@@ -74,3 +74,6 @@ vncviewer localhost:13901
 
 - `DISPLAY`: X11 display configuration (default: `:99`)
 - `PYTHONUNBUFFERED`: Python output buffering (default: `1`)
+
+
+<!-- Security scan triggered at 2025-09-02 05:21:34 -->
